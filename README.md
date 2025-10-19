@@ -1,4 +1,4 @@
-# Flaphl Precept - Modern PHP ORM
+# Flaphl Precept 
 
 **Precept** is a contract-driven Object-Relational Mapper (ORM) for PHP 8.2+, providing a powerful and flexible data persistence layer.
 
