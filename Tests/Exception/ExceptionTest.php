@@ -18,6 +18,7 @@ use Flaphl\Fridge\Precept\Exception\QueryException;
 use Flaphl\Fridge\Precept\Exception\HydrationException;
 use Flaphl\Fridge\Precept\Exception\TransactionException;
 use Flaphl\Fridge\Precept\Exception\CacheException;
+use Flaphl\Fridge\Precept\Exception\MigrationException;
 use PHPUnit\Framework\TestCase;
 
 class ExceptionTest extends TestCase
@@ -145,5 +146,62 @@ class ExceptionTest extends TestCase
         $this->assertInstanceOf(PreceptException::class, $exception);
         $this->assertStringContainsString('invalidation failed', $exception->getMessage());
         $this->assertStringContainsString('Backend unavailable', $exception->getMessage());
+    }
+
+    public function testMigrationExceptionNotFound(): void
+    {
+        $exception = MigrationException::notFound('2025_10_19_create_users_table');
+        
+        $this->assertInstanceOf(PreceptException::class, $exception);
+        $this->assertStringContainsString('2025_10_19_create_users_table', $exception->getMessage());
+        $this->assertStringContainsString('not found', $exception->getMessage());
+    }
+
+    public function testMigrationExceptionAlreadyExists(): void
+    {
+        $exception = MigrationException::alreadyExists('2025_10_19_create_users_table');
+        
+        $this->assertInstanceOf(PreceptException::class, $exception);
+        $this->assertStringContainsString('2025_10_19_create_users_table', $exception->getMessage());
+        $this->assertStringContainsString('already exists', $exception->getMessage());
+    }
+
+    public function testMigrationExceptionExecutionFailed(): void
+    {
+        $previous = new \RuntimeException('SQL error');
+        $exception = MigrationException::executionFailed('create_users_table', $previous);
+        
+        $this->assertInstanceOf(PreceptException::class, $exception);
+        $this->assertStringContainsString('create_users_table', $exception->getMessage());
+        $this->assertStringContainsString('execution failed', $exception->getMessage());
+        $this->assertSame($previous, $exception->getPrevious());
+    }
+
+    public function testMigrationExceptionRollbackFailed(): void
+    {
+        $previous = new \RuntimeException('SQL error');
+        $exception = MigrationException::rollbackFailed('create_users_table', $previous);
+        
+        $this->assertInstanceOf(PreceptException::class, $exception);
+        $this->assertStringContainsString('create_users_table', $exception->getMessage());
+        $this->assertStringContainsString('rollback failed', $exception->getMessage());
+        $this->assertSame($previous, $exception->getPrevious());
+    }
+
+    public function testMigrationExceptionInvalidFile(): void
+    {
+        $exception = MigrationException::invalidFile('/path/to/migration.php', 'Missing class');
+        
+        $this->assertInstanceOf(PreceptException::class, $exception);
+        $this->assertStringContainsString('/path/to/migration.php', $exception->getMessage());
+        $this->assertStringContainsString('Missing class', $exception->getMessage());
+    }
+
+    public function testMigrationExceptionRepositoryNotFound(): void
+    {
+        $exception = MigrationException::repositoryNotFound();
+        
+        $this->assertInstanceOf(PreceptException::class, $exception);
+        $this->assertStringContainsString('repository does not exist', $exception->getMessage());
     }
 }
