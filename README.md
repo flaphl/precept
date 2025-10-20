@@ -10,9 +10,13 @@
 - **Attribute Mapping** - PHP 8 attributes for entity configuration
 - **Schema Management** - DDL operations and migrations
 - **Transaction Support** - ACID-compliant transactions
-- **Query Builder** - Fluent interface for complex queries
-- **Event System** - Lifecycle events (PrePersist, PostLoad, etc.)
-- **Cache Integration** - Query and metadata caching (PSR-6)
+- **Query Builder** - Fluent interface for complex queries with DQL parser
+- **Event System** - Lifecycle events (PrePersists, PostLoad, PreUpdate, etc.)
+- **Cache Integration** - Query, entity, and metadata caching (PSR-6)
+- **Distributed Locking** - Prevent concurrent modifications with cache-based locks
+- **ID Generators** - Multiple strategies (identity, sequence) with allocation
+- **Metadata Builders** - Fluent API for programmatic entity configuration
+- **Multiple Drivers** - Attributes, XML, and database schema introspection
 - **DI Integration** - Works with PSR-11 containers
 
 ## Installation
@@ -102,23 +106,110 @@ $entityManager->transactional(function($em) use ($user) {
 });
 ```
 
+### Cache System (v3.0+)
+
+```php
+use Flaphl\Fridge\Precept\Cache\DefaultCache;
+use Flaphl\Fridge\Precept\Cache\QueryCache;
+
+// Query caching
+$queryCache = new QueryCache($cache);
+$result = $queryCache->executeWithCache($sql, $params, function() use ($em) {
+    return $em->executeQuery($sql, $params);
+}, $ttl = 3600);
+
+// Cache regions
+$cache->getRegion('users')->put('user:1', $user);
+$user = $cache->getRegion('users')->get('user:1');
+
+// Distributed locking
+$lock->executeWithLock('entity:user:1', function() use ($user, $em) {
+    $user->setBalance($user->getBalance() + 100);
+    $em->flush();
+});
+```
+
+### ID Generators (v3.0+)
+
+```php
+use Flaphl\Fridge\Precept\Id\SequenceGenerator;
+
+// Sequence-based IDs
+$generator = new SequenceGenerator($connection, 'user_id_seq', $allocationSize = 10);
+$newId = $generator->generate($entity);
+```
+
+### Lifecycle Events (v3.0+)
+
+```php
+use Flaphl\Fridge\Precept\Mapping\PrePersists;
+use Flaphl\Fridge\Precept\Mapping\PostLoad;
+
+#[ORM\Entity]
+class User
+{
+    #[PrePersists]
+    public function beforeInsert(): void
+    {
+        $this->createdAt = new \DateTime();
+    }
+
+    #[PostLoad]
+    public function afterLoad(): void
+    {
+        $this->initializeCollections();
+    }
+}
+```
+
+### Fluent Builders (v3.0+)
+
+```php
+use Flaphl\Fridge\Precept\Mapping\Builder\ClassMetaDataBuilder;
+
+$builder = new ClassMetaDataBuilder($metadata);
+$builder
+    ->setTable('users')
+    ->setIdentifier('id')
+    ->addField('username', 'string')
+        ->length(255)
+        ->unique(true)
+        ->build()
+    ->addOneToMany('posts', Post::class)
+        ->mappedBy('author')
+        ->cascade(['persist', 'remove'])
+        ->build()
+    ->build();
+```
+
 ## Architecture
 
 Precept follows Flaphl's contract-first design:
 
-- **64 interfaces** defining all ORM functionality
+- **64+ interfaces** defining all ORM functionality
 - **PSR compliance** - PSR-6 (Cache), PSR-11 (Container), PSR-14 (Events)
 - **Type-safe** - Full PHP 8.2+ type declarations with generics
 - **Event-driven** - 11 lifecycle events for entity operations
 - **Modular** - Independent contracts with unified integration
+- **Cache-aware** - Built-in caching with regions and distributed locking
 
 ## Testing
 
 Precept includes comprehensive test coverage:
 
-- **150 tests, 445 assertions, 100% passing**
+- **205 tests, 577 assertions, 100% passing**
 - All interfaces, attributes, enums, and traits tested
+- Cache system, ID generators, builders fully covered
 - Stress-tested before release
+
+## What's New in v3.0
+
+- **Cache System**: PSR-6 integration with regions, query caching, and distributed locks
+- **ID Generators**: Identity and sequence generators with allocation
+- **Lifecycle Attributes**: 8 new PHP 8 attributes for lifecycle hooks
+- **Fluent Builders**: Programmatic metadata configuration
+- **Metadata Drivers**: XML and database introspection drivers
+- **Query System**: Complete DQL parser and result set mapping
 
 ## Requirements
 

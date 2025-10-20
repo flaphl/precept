@@ -2,8 +2,94 @@
 
 All notable changes to the Precept ORM package will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [3.0.0] - 2025-10-19
+
+### Added
+
+#### Cache System (14 new files)
+- **DefaultCache** - Main cache implementation with region support and PSR-6 integration
+- **Lock** - Distributed cache lock for preventing concurrent entity modifications
+- **QueryCache** - Query result caching with automatic key generation
+- **Region Interface** - Cache region abstraction for grouped invalidation
+- **DefaultRegion** - Standard region implementation with statistics tracking
+- **FileLockRegion** - File-based locking region for distributed environments
+- **CacheLogger** - PSR-3 logging for cache operations
+- **CacheLoggerChain** - Chain multiple cache loggers
+- **CachePersister** - Cache persistence strategies
+- **CacheEntityPersister** - Entity-specific cache persistence
+- **DefaultEntityHydrator** - Cache-aware entity hydration
+- **CacheException** - Cache-specific exceptions
+- **LockException** - Lock acquisition/release exceptions
+
+#### ID Generators (3 new files)
+- **AbstractIdGenerator** - Base class for ID generation strategies
+- **IdentityGenerator** - Auto-increment/IDENTITY column support
+- **SequenceGenerator** - Database sequence support with configurable allocation size
+
+#### Lifecycle Attributes (8 new files)
+- **PrePersists** - Marks methods to execute before entity insert
+- **PostPersists** - Marks methods to execute after entity insert
+- **PreUpdate** - Marks methods to execute before entity update
+- **PostUpdate** - Marks methods to execute after entity update
+- **PreRemove** - Marks methods to execute before entity delete
+- **PostRemove** - Marks methods to execute after entity delete
+- **PreFlush** - Marks methods to execute before flush operation
+- **PostLoad** - Marks methods to execute after entity hydration
+
+#### Schema Attributes (3 new files)
+- **Table** - Configure table name, schema, and indexes
+- **JoinTable** - Configure many-to-many join tables
+- **Cache** - Configure entity-level cache settings (usage, region)
+
+#### Mapping Builders (5 new files)
+- **ClassMetaDataBuilder** - Fluent API for building entity metadata
+- **FieldBuilder** - Fluent API for field configuration (length, nullable, unique)
+- **EntityListenerBuilder** - Configure entity lifecycle listeners
+- **OneToManyAssociationBuilder** - Configure one-to-many relationships
+- **ManyToManyAssociationBuilder** - Configure many-to-many relationships
+
+#### Mapping Drivers (3 new files)
+- **DatabaseDriver** - Load metadata from existing database schema
+- **SimplifiedXmlDriver** - Load metadata from simplified XML format
+- **XmlDriver** - Full-featured XML metadata driver
+
+#### Query System (4 new files)
+- **AbstractQuery** - Base query implementation with parameters and hydration
+- **Query** - Concrete query class for SQL execution
+- **Parser** - Parse DQL to SQL with parameter mapping
+- **ParserResult** - Encapsulates parsed SQL and result set mapping
+
+### Testing
+- **94 new tests** across 7 test files
+- **DefaultCacheTest** (7 tests) - Region management, statistics, clearing
+- **LockTest** (5 tests) - Lock acquisition, release, timeout, token validation
+- **QueryCacheTest** (6 tests) - Query caching, eviction, contains checks
+- **IdGeneratorTest** (9 tests) - Identity and sequence generators
+- **AttributesTest** (15 tests) - All lifecycle and schema attributes
+- **BuildersTest** (31 tests) - All fluent builders with method chaining
+- **QuerySystemTest** (25 tests) - Query execution, parsing, hydration
+- **Total: 205 tests, 577 assertions, 100% passing**
+
+### Features
+- PSR-6 cache integration with region-based organization
+- Distributed locking for concurrent access control
+- Query result caching with automatic cache key generation
+- Multiple ID generation strategies (identity, sequence)
+- Complete lifecycle event system with PHP 8 attributes
+- Fluent metadata builders for programmatic entity configuration
+- Multiple metadata drivers (attributes, XML, database)
+- Advanced query system with DQL parser
+- Cache statistics and monitoring
+- Lock timeouts and token-based validation
+
+### Breaking Changes
+- Renamed lifecycle attributes from singular to plural (e.g., `PrePersist` → `PrePersists`)
+- Cache API uses `contains()` instead of `has()`
+- Cache API uses `evict()` / `evictAll()` instead of `delete()` / `clear()`
+- Lock `release()` now returns void and throws exceptions on failure
 
 ## [1.1.0] - 2025-10-19
 
